@@ -17,7 +17,7 @@ var rpc_config = {
 var bitcoreEndpoint = "http://bitcoin.bithereum.network:3001/";
 
 // BTC Sync Stop
-var syncStopBlock = 2012;
+var syncStopBlock = 555555;
 
 // Fetching indicator
 var isFetchingBlock = false;
