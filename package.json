@@ -1,0 +1,28 @@
+{
+  "name": "@bithereum/btcsyncer",
+  "version": "1.0.0",
+  "description": "Used to take BTC blocks from a Bitcore Bitcoin Full Node and add them to Bithereum",
+  "main": "run.js",
+  "dependencies": {
+    "bitcoind-rpc": "^0.7.2",
+    "got": "^9.5.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/BTHPOS/btcsyncer.git"
+  },
+  "keywords": [
+    "bithereum",
+    "bitcoin"
+  ],
+  "author": "Dondrey Taylor",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BTHPOS/btcsyncer/issues"
+  },
+  "homepage": "https://github.com/BTHPOS/btcsyncer#readme"
+}
