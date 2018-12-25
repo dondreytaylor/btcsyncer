@@ -114,4 +114,4 @@ var syncBlocks = async function() {
     }
 };
 
-var timeout = setInterval(syncBlocks, 200);
+var timeout = setInterval(syncBlocks, 300);
