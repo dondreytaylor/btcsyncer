@@ -9,7 +9,7 @@ var rpc_config = {
     protocol: 'http',
     user: 'bithereum',
     pass: 'bithereum',
-    host: 'node1.bithereum.network',
+    host: '3.83.110.186',
     port: '18554',
 };
 
@@ -95,14 +95,19 @@ var submitBlock = function(blockHex) {
 var syncBlocks = async function() {
     if (!isFetchingBlock) {
         isFetchingBlock = true;
-        var index = await getBlockCount() + 1;
-        var hash = await getBlockHash(index);
-        var hex = await getBlockHex(hash);
-        var hexFinal = changeHeader(hex);
-        var submitted = await submitBlock(hexFinal);
-        if (submitted) {
-          console.log("[NOTICE]", index+1, "BLOCK SUBMITTED")
+       
+       try {
+          var index = await getBlockCount() + 1;
+          var hash = await getBlockHash(index);
+          var hex = await getBlockHex(hash);
+          var hexFinal = changeHeader(hex);
+          var submitted = submitBlock(hexFinal);
+          // var submitted = await submitBlock(hexFinal);
+          // if (submitted) {
+             console.log("[NOTICE]", index+1, "BLOCK SUBMITTED")
+          //}
         }
+	catch(e) {}
 
         if (index+1 >= syncStopBlock) {
             console.log("[DONE]");
@@ -114,4 +119,4 @@ var syncBlocks = async function() {
     }
 };
 
-var timeout = setInterval(syncBlocks, 500);
+var timeout = setInterval(syncBlocks);
