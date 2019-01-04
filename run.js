@@ -4,54 +4,59 @@ var got = require("got");
 // RPC Client
 var RPCClient = require('bitcoind-rpc');
 
-// RPC Configuration
-var rpc_config = {
+// RPC Configuration (Sync from node)
+var sync_from_rpc = {
     protocol: 'http',
-    user: 'bithereum',
-    pass: 'bithereum',
-    host: '3.83.110.186',
-    port: '18554',
+    user: '',
+    pass: '',
+    host: '',
+    port: '',
 };
 
-// BTC Bitcore Endpoint
-var bitcoreEndpoint = "http://bitcoin.bithereum.network:3001/";
+// RPC Configuration (Sync to node)
+var sync_to_rpc = {
+    protocol: 'http',
+    user: '',
+    pass: '',
+    host: '',
+    port: '',
+};
 
-// BTC Sync Stop
-var syncStopBlock = 555555;
 
 // Fetching indicator
 var isFetchingBlock = false;
 
 // RPC
-var rpc = new RPCClient(rpc_config);
+var syncFromRPC = new RPCClient(sync_from_rpc);
+var syncToRPC = new RPCClient(sync_to_rpc);
 
-var getBlockHash = function(blockNumber) {
+var getBlockHash = function(rpc, blockNumber) {
   return new Promise(function(resolve, reject) {
-      got(bitcoreEndpoint + "insight-api/block-index/" + blockNumber)
-        .then(function(response) {
-            try  {
-                resolve(JSON.parse(response.body).blockHash);
-            } catch(e) {
-                reject();
-            }
-        });
+      rpc.getBlockHash(function(err, response) {
+          if (!err && !response.err) {
+              resolve(response.result);
+          }
+          else {
+              reject();
+          }
+      });
   });
 };
 
-var getBlockHex = function(blockHash) {
+var getBlockHex = function(rpc, blockHash) {
   return new Promise(function(resolve, reject) {
-      got(bitcoreEndpoint + "insight-api/rawblock/" + blockHash)
-        .then(function(response) {
-            try  {
-                resolve(JSON.parse(response.body).rawblock);
-            } catch(e) {
-                reject();
-            }
-        });
+      rpc.getBlock(function(err, response) {
+          if (!err && !response.err) {
+              resolve(response.result);
+          }
+          else {
+              reject();
+          }
+      });
   });
 };
 
-var getBlockCount = function() {
+var getBlockCount = function(rpc) {
   return new Promise(function(resolve, reject) {
       rpc.getBlockCount(function(err, response) {
           if (!err && !response.err) {
@@ -64,21 +69,7 @@ var getBlockCount = function() {
   });
 };
 
-var changeHeader = function(blockHex) {
-    // Reformat header
-    var padding1 = "0000000000000000000000000000000000000000000000000000000000000000";
-    var padding2 = "0000000000000000000000000000000000000000000000000000000000";
-    var formattedBlockHex = [
-        blockHex.slice(0,136),
-        padding1,
-        blockHex.slice(136,160),
-        padding2,
-        blockHex.slice(160,blockHex.length)
-    ].join("");
-    return formattedBlockHex;
-};
-
-var submitBlock = function(blockHex) {
+var submitBlock = function(rpc, blockHex) {
   return new Promise(function(resolve, reject) {
       rpc.submitBlock(blockHex, function(err, response) {
           if (!err && !response.err) {
@@ -91,30 +82,24 @@ var submitBlock = function(blockHex) {
   });
 };
 
-
 var syncBlocks = async function() {
     if (!isFetchingBlock) {
         isFetchingBlock = true;
-       
-       try {
-          var index = await getBlockCount() + 1;
-          var hash = await getBlockHash(index);
-          var hex = await getBlockHex(hash);
-          var hexFinal = changeHeader(hex);
-          var submitted = submitBlock(hexFinal);
-          // var submitted = await submitBlock(hexFinal);
-          // if (submitted) {
-             console.log("[NOTICE]", index+1, "BLOCK SUBMITTED")
-          //}
-        }
-	catch(e) {}
-
-        if (index+1 >= syncStopBlock) {
-            console.log("[DONE]");
-            try {
-              clearInterval(timeout);
-            }   catch (e) {}
-        }
+        try {
+            var syncFromBlockCount = await getBlockCount(syncFromRPC) + 1;
+            var syncToBlockCount = await getBlockCount(syncToRPC) + 1;
+            if (syncToBlockCount != syncFromBlockCount) {
+                var hash = await getBlockHash(syncFromRPC, index);
+                var hex = await getBlockHex(syncFromRPC, hash);
+                var submitted = submitBlock(syncToRPC, hexFinal);
+                console.log(syncToBlockCount, "of", syncFromBlockCount, "blocks synced");
+            }
+            else {
+                console.log("[DONE]");
+                clearInterval(timeout);
+            }
+         }
+        catch(e) { console.log(e); }
         isFetchingBlock = false;
     }
 };
